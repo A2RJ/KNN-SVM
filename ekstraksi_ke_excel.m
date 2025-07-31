@@ -1,83 +1,61 @@
-% Ekstraksi fitur ke file Excel dari dataset train dan test (sehat & sakit)
-% Referensi: Feature_Extraction1.m
+clc; clear;
 
-% Hapus file Excel jika sudah ada
-if exist('ekstraksi_fitur_dataset.xlsx', 'file')
-    delete('ekstraksi_fitur_dataset.xlsx');
+% Lokasi penyimpanan hasil Excel
+output_file = 'ekstraksi_fitur_dataset.xlsx';
+if exist(output_file, 'file')
+    delete(output_file);
 end
 
-% Path dataset
-train_sehat_dir = 'dataset/train/sehat/';
-train_sakit_dir = 'dataset/train/sakit/';
-test_sehat_dir  = 'dataset/test/sehat/';
-test_sakit_dir  = 'dataset/test/sakit/';
+% Konfigurasi
+sheet_names = {'Train', 'Test'};
+groups = {'train', 'test'};
+labels = {'sehat', 'sakit'};
+baris = 64; kolom = 64;
+threshold = 55;
 
-% List folder dan label
-folders = {train_sehat_dir, train_sakit_dir, test_sehat_dir, test_sakit_dir};
-labels  = {'sehat', 'sakit', 'sehat', 'sakit'};
-groups  = {'train', 'train', 'test', 'test'};
+% Header kolom
+headers = {'Id', 'On', 'Off', 'Mean', 'Std', 'Label'};
 
-% Inisialisasi tabel hasil untuk train dan test
-train_features = [];
-test_features = [];
-id_counter_train = 1;
-id_counter_test = 1;
-
-for i = 1:length(folders)
-    folder = folders{i};
-    label  = labels{i};
-    group  = groups{i};
-    files = dir(fullfile(folder, '*.jpg')); % asumsikan gambar .jpg, sesuaikan jika perlu
+% Loop untuk masing-masing sheet (Train dan Test)
+for s = 1:2
+    sheet = sheet_names{s};
+    data_rows = {};  % buffer penyimpanan baris data
+    idx = 1;
     
-    for j = 1:length(files)
-        filename = fullfile(folder, files(j).name);
-        img = imread(filename);
+    for l = 1:2  % sehat dan sakit
+        label = labels{l};
+        folder = fullfile('dataset', groups{s}, label);
+        img_files = dir(fullfile(folder, '*.jpg'));
+        img_files = [img_files; dir(fullfile(folder, '*.jpeg'))];
         
-        % --- Ekstraksi fitur ---
-        if size(img,3) == 3
-            img_gray = rgb2gray(img);
-        else
-            img_gray = img;
-        end
-        
-        mean_val = mean(img_gray(:));
-        std_val  = std(double(img_gray(:)));
-        
-        % Ekstraksi fitur 'on' dan 'off' berdasarkan threshold Otsu
-        level = graythresh(img_gray); % threshold Otsu (nilai antara 0-1)
-        bw = imbinarize(img_gray, level);
-        on_val = sum(bw(:)); % jumlah pixel putih (on)
-        off_val = numel(bw) - on_val; % jumlah pixel hitam (off)
-        
-        % Format on_val dan off_val maksimal 4 angka
-        on_val = round(on_val, 4, 'significant');
-        off_val = round(off_val, 4, 'significant');
-        
-        % Label: ganti 'sakit' menjadi 'PMK', selain itu 'Normal'
-        if strcmp(label, 'sakit')
-            label_excel = 'PMK';
-        else
-            label_excel = 'Normal';
-        end
-        
-        % Simpan ke tabel sesuai urutan header
-        if strcmp(group, 'train')
-            train_features = [train_features; {id_counter_train, on_val, off_val, mean_val, std_val, label_excel}];
-            id_counter_train = id_counter_train + 1;
-        else
-            test_features = [test_features; {id_counter_test, on_val, off_val, mean_val, std_val, label_excel}];
-            id_counter_test = id_counter_test + 1;
+        for i = 1:length(img_files)
+            path = fullfile(img_files(i).folder, img_files(i).name);
+            img = imread(path);
+            if size(img,3) == 3
+                img = rgb2gray(img);
+            end
+            img = imresize(img, [baris kolom]);
+
+            % Ekstraksi fitur
+            mean_val = mean2(img);
+            std_val = std2(double(img));
+            [on_pxl, off_pxl] = count_img(img, threshold);
+
+            % Simpan ke buffer baris
+            data_rows(idx, :) = {idx, on_pxl, off_pxl, mean_val, std_val, label}; %#ok<AGROW>
+            idx = idx + 1;
         end
     end
+
+    % Tulis ke Excel (Header + Data)
+    writecell([headers; data_rows], output_file, 'Sheet', sheet, 'Range', 'A1');
 end
 
-% Buat tabel dengan header sesuai permintaan
-feature_names = {'Id', 'on', 'off', 'mean', 'std', 'label'};
-T_train = cell2table(train_features, 'VariableNames', feature_names);
-T_test  = cell2table(test_features,  'VariableNames', feature_names);
+disp("✅ Ekstraksi selesai dan disimpan di 'ekstraksi_fitur_dataset.xlsx'");
 
-% Simpan ke file Excel dengan sheet 1 = train, sheet 2 = test
-writetable(T_train, 'ekstraksi_fitur_dataset.xlsx', 'Sheet', 'train');
-writetable(T_test,  'ekstraksi_fitur_dataset.xlsx', 'Sheet', 'test');
-
-disp('Ekstraksi fitur selesai dan disimpan ke ekstraksi_fitur_dataset.xlsx');
+% --- Fungsi bantu hitung ON/OFF ---
+function [on_pxl, off_pxl] = count_img(img, th)
+    bw = img >= th;
+    on_pxl = sum(bw(:));
+    off_pxl = numel(bw) - on_pxl;
+end
