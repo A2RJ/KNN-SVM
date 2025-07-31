@@ -1,31 +1,32 @@
-% KNN_klasifikasi.m
 clc; clear;
 
-% Baca data dari file Excel
-filename = 'ekstraksi_fitur_dataset.xlsx';  % Ganti jika nama file berbeda
-train_data = readtable(filename, 'Sheet', 'Train');
-test_data  = readtable(filename, 'Sheet', 'Test');
+% === Parameter ===
+k = 3;
+file_excel = 'ekstraksi_fitur_dataset.xlsx';  % Ganti dengan nama file Excel kamu
 
-% Ekstrak fitur dan label dari data latih
-X_train = table2array(train_data(:, {'On', 'Off', 'Mean', 'Std'}));
+% === Baca data ===
+train_data = readtable(file_excel, 'Sheet', 'Train');
+test_data  = readtable(file_excel, 'Sheet', 'Test');
+
+X_train = table2array(train_data(:,2:5));  % ON, OFF, Mean, Std
 y_train = train_data.Label;
 
-% Ekstrak fitur dan label dari data uji
-X_test = table2array(test_data(:, {'On', 'Off', 'Mean', 'Std'}));
+X_test = table2array(test_data(:,2:5));
 y_test = test_data.Label;
 
-% Buat model KNN (default K = 5)
-modelKNN = fitcknn(X_train, y_train, 'NumNeighbors', 5);
+% === KNN manual ===
+y_pred = strings(size(y_test));
 
-% Prediksi data uji
-y_pred = predict(modelKNN, X_test);
+for i = 1:size(X_test,1)
+    dist = sqrt(sum((X_train - X_test(i,:)).^2, 2));
+    [~, idx] = sort(dist);
+    k_labels = y_train(idx(1:k));
+    y_pred(i) = mode(categorical(k_labels));
+end
 
-% Evaluasi hasil
-confmat = confusionmat(y_test, y_pred);
-akurasi = sum(strcmp(y_test, y_pred)) / length(y_test) * 100;
+% === Evaluasi ===
+akurasi = sum(y_pred == y_test) / numel(y_test) * 100;
+fprintf('Akurasi KNN manual: %.2f%%\n', akurasi);
 
-% Tampilkan hasil
-disp('Confusion Matrix:');
-disp(confmat);
-
-fprintf('Akurasi: %.2f%%\n', akurasi);
+hasil = table(test_data.Id, y_test, y_pred, 'VariableNames', {'Id', 'LabelAsli', 'Prediksi'});
+disp(hasil);
