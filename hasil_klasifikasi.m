@@ -86,3 +86,22 @@ nama_metode = ["KNN"; "SVM"];
 akurasi = [akurasi_knn; akurasi_svm];
 tabel_akurasi = table(nama_metode, akurasi, 'VariableNames', {'Metode', 'Akurasi'});
 writetable(tabel_akurasi, file_excel_hasil, 'Sheet', 3);
+
+%% === Simpan Model KNN dan SVM ===
+
+% Model KNN tidak punya parameter pelatihan (lazy learner)
+modelKNN.k = k;
+modelKNN.X_train = X_train;
+modelKNN.y_train = y_train;
+
+% Model SVM manual
+modelSVM.w = w;
+modelSVM.b = b;
+modelSVM.mean = mean(X_train);       % untuk normalisasi
+modelSVM.std  = std(X_train);        % untuk normalisasi
+
+% Simpan kedua model ke file .mat
+save('modelKNN.mat', 'modelKNN');
+save('modelSVM.mat', 'modelSVM');
+
+disp("Model KNN dan SVM berhasil disimpan ke file .mat.");
