@@ -80,3 +80,9 @@ fprintf("Akurasi SVM Manual: %.2f%%\n", akurasi_svm);
 hasil_svm = table(test_data.Id, y_test, y_pred_svm_str, ...
     'VariableNames', {'Id', 'LabelAsli', 'Prediksi'});
 writetable(hasil_svm, file_excel_hasil, 'Sheet', 'SVM');
+
+%% === Simpan Akurasi ke Sheet ke-3 ===
+nama_metode = ["KNN"; "SVM"];
+akurasi = [akurasi_knn; akurasi_svm];
+tabel_akurasi = table(nama_metode, akurasi, 'VariableNames', {'Metode', 'Akurasi'});
+writetable(tabel_akurasi, file_excel_hasil, 'Sheet', 3);
