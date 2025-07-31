@@ -1,0 +1,6 @@
+- KNN ->   
+- SVM -> 
+
+- aplikasi
+- input -> diprosesing (Grayscale, Filtering, Hitogram, aku lupa 1 lagi) -> output (PMK/Sehat)
+standar devitiation dari trasholding
