@@ -87,7 +87,7 @@ python test_akurasi.py
 
 ### 3. Menggunakan GUI MATLAB (app.mlapp)
 
-File `../app.mlapp` adalah aplikasi GUI MATLAB yang dapat digunakan untuk testing model secara interaktif:
+File `app.mlapp` adalah aplikasi GUI MATLAB yang dapat digunakan untuk testing model secara interaktif:
 
 - **Memuat Model:** GUI akan memuat model KNN, SVM, dan scaler yang sudah dilatih dari file `.pkl`
 - **Input Gambar:** Pengguna dapat memilih gambar untuk diklasifikasi melalui interface GUI
