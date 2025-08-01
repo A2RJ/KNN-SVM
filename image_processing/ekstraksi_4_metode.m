@@ -2,8 +2,8 @@ clc; clear;
 
 % Parameter
 k = 3;
-folder_train = 'dataset/train';
-folder_test = 'dataset/test';
+folder_train = '../dataset/train';
+folder_test = '../dataset/test';
 
 % --- Konfigurasi untuk ekspor ke Excel ---
 output_file = 'ekstraksi_fitur_dataset_4.xlsx';
