@@ -1,37 +1,32 @@
-% test_akurasi.m
-% Menghitung akurasi model KNN dan SVM dari file Excel menggunakan Python
+# py_in_matlab/test_akurasi.py
+import pandas as pd
+import joblib
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
-% Pastikan environment Python sudah terhubung
-if count(py.sys.path,'') == 0
-    insert(py.sys.path,int32(0),''); 
-end
-py.importlib.import_module('load_model_predict');  % Pastikan module py ada
+# === Load dataset dari file Excel ===
+df_test = pd.read_excel('ekstraksi_fitur_dataset_4.xlsx', sheet_name='Test')
+X_test = df_test[['On', 'Off', 'Mean', 'Std']].values
+y_test = df_test['Label'].values
 
-% Load data dari Excel (sheet Test)
-file_excel = '../image_processing/ekstraksi_fitur_dataset_4.xlsx';
-opts = detectImportOptions(file_excel, 'Sheet', 'Test');
-opts = setvartype(opts, {'On','Off','Mean','Std'}, 'double');
-data = readtable(file_excel, opts, 'Sheet', 'Test');
+# === Load model dan scaler ===
+knn = joblib.load('model_knn.pkl')
+svm = joblib.load('model_svm.pkl')
+scaler = joblib.load('scaler.pkl')
 
-% Ekstrak fitur dan label
-X_test = table2array(data(:, {'On','Off','Mean','Std'}));
-y_true = string(data.Label);
+# === Normalisasi fitur test ===
+X_test_scaled = scaler.transform(X_test)
 
-% Inisialisasi array prediksi
-y_pred_knn = strings(height(data), 1);
-y_pred_svm = strings(height(data), 1);
+# === Prediksi dan evaluasi ===
+y_pred_knn = knn.predict(X_test_scaled)
+y_pred_svm = svm.predict(X_test_scaled)
 
-% Lakukan prediksi menggunakan model Python
-for i = 1:height(data)
-    fitur = X_test(i,:);
-    [knn_label, svm_label] = load_model_predict(fitur);
-    y_pred_knn(i) = string(knn_label);
-    y_pred_svm(i) = string(svm_label);
-end
+# === Hasil evaluasi ===
+print("=== Evaluasi KNN ===")
+print("Akurasi :", accuracy_score(y_test, y_pred_knn) * 100, "%")
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred_knn))
+print("Classification Report:\n", classification_report(y_test, y_pred_knn))
 
-% Hitung akurasi
-akurasi_knn = sum(y_pred_knn == y_true) / numel(y_true) * 100;
-akurasi_svm = sum(y_pred_svm == y_true) / numel(y_true) * 100;
-
-fprintf("✅ Akurasi KNN (Python): %.2f%%\n", akurasi_knn);
-fprintf("✅ Akurasi SVM (Python): %.2f%%\n", akurasi_svm);
+print("\n=== Evaluasi SVM ===")
+print("Akurasi :", accuracy_score(y_test, y_pred_svm) * 100, "%")
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred_svm))
+print("Classification Report:\n", classification_report(y_test, y_pred_svm))
