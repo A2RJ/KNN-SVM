@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
-from sklearn.preprocessing import StandardScaler
 import joblib
 
 # --- Konfigurasi ---
@@ -62,10 +61,9 @@ with pd.ExcelWriter(output_excel) as writer:
     df_test.to_excel(writer, sheet_name=sheet_test, index=False)
 print(f"✅ Data disimpan ke {output_excel}")
 
-# --- Normalisasi ---
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
+# --- Tanpa Normalisasi (scaler dimatikan) ---
+X_train_scaled = X_train
+X_test_scaled = X_test
 
 # --- Train model ---
 knn = KNeighborsClassifier(n_neighbors=3)
@@ -74,9 +72,8 @@ knn.fit(X_train_scaled, y_train)
 svm = SVC(kernel='linear')
 svm.fit(X_train_scaled, y_train)
 
-# --- Simpan model dan scaler ---
+# --- Simpan model (tanpa scaler) ---
 joblib.dump(knn, 'model_knn.pkl')
 joblib.dump(svm, 'model_svm.pkl')
-joblib.dump(scaler, 'scaler.pkl')
 
-print("✅ Model KNN, SVM, dan scaler berhasil disimpan.")
+print("✅ Model KNN dan SVM berhasil disimpan (tanpa scaler).")

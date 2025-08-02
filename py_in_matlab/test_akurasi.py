@@ -8,17 +8,13 @@ df_test = pd.read_excel('ekstraksi_fitur_dataset_4.xlsx', sheet_name='Test')
 X_test = df_test[['On', 'Off', 'Mean', 'Std']].values
 y_test = df_test['Label'].values
 
-# === Load model dan scaler ===
+# === Load model (tanpa scaler) ===
 knn = joblib.load('model_knn.pkl')
 svm = joblib.load('model_svm.pkl')
-scaler = joblib.load('scaler.pkl')
 
-# === Normalisasi fitur test ===
-X_test_scaled = scaler.transform(X_test)
-
-# === Prediksi dan evaluasi ===
-y_pred_knn = knn.predict(X_test_scaled)
-y_pred_svm = svm.predict(X_test_scaled)
+# === Prediksi dan evaluasi (tanpa normalisasi/scaler) ===
+y_pred_knn = knn.predict(X_test)
+y_pred_svm = svm.predict(X_test)
 
 # === Hasil evaluasi ===
 print("=== Evaluasi KNN ===")

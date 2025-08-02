@@ -12,15 +12,15 @@ function [hasilKNN, hasilSVM] = load_model_predict(fitur)
     if ~isa(fitur, 'double') || numel(fitur) ~= 4
         error("Fitur harus berupa vektor double dengan 4 elemen.");
     end
-    pyFitur = py.list(fitur);
+    pyFitur = py.list(num2cell(fitur));
 
     try
         % Panggil fungsi Python
         hasil = py.load_model_predict.predict(pyFitur);
 
-        % Ambil hasil prediksi
-        hasilKNN = string(hasil{1});
-        hasilSVM = string(hasil{2});
+        % Ambil hasil prediksi dan konversi dari py.numpy.str_ ke char
+        hasilKNN = char(hasil{1});
+        hasilSVM = char(hasil{2});
     catch ME
         error("❌ Gagal memanggil Python: %s", ME.message);
     end
