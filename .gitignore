@@ -1,0 +1,3 @@
+# Ignore dataset subfolders but not the /dataset folder itself
+/dataset/*
+!/dataset/.gitkeep
