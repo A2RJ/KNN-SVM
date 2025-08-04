@@ -109,7 +109,7 @@ layers = [
     % Output Layer
     fullyConnectedLayer(numClasses, 'Name', 'fc_output')
     softmaxLayer('Name', 'softmax')
-    classificationLayer('Name', 'classification')
+    classificationLayer('Name', 'output')
 ];
 
 % Analyze network
@@ -209,40 +209,147 @@ if length(classes) == 2
     fprintf('🎯 AUC Score: %.3f\n', AUC);
 end
 
-% Sample predictions visualization
-figure('Position', [100, 600, 800, 600]);
-numSamples = min(16, numel(imdsTest.Files));
-subplot_rows = ceil(sqrt(numSamples));
-subplot_cols = ceil(numSamples / subplot_rows);
+% ALL Test Data Predictions Visualization
+fprintf('📊 Creating complete test predictions visualization...\n');
+numTestSamples = numel(imdsTest.Files);
 
-for i = 1:numSamples
-    subplot(subplot_rows, subplot_cols, i);
+% Calculate grid dimensions for all samples
+samplesPerFigure = 50; % Maximum samples per figure for readability
+numFigures = ceil(numTestSamples / samplesPerFigure);
+
+% Count correct/incorrect predictions per class
+classStats = struct();
+for i = 1:length(classes)
+    className = char(classes{i});
+    classIndices = find(YTrue == classes{i});
     
-    % Read and display image
-    img = readimage(imdsTest, i);
-    imshow(img);
+    classStats.(className).total = length(classIndices);
+    classStats.(className).correct = sum(YPred(classIndices) == YTrue(classIndices));
+    classStats.(className).incorrect = classStats.(className).total - classStats.(className).correct;
+    classStats.(className).accuracy = (classStats.(className).correct / classStats.(className).total) * 100;
+end
+
+% Create multiple figures if needed
+for figNum = 1:numFigures
+    startIdx = (figNum - 1) * samplesPerFigure + 1;
+    endIdx = min(figNum * samplesPerFigure, numTestSamples);
+    currentSamples = endIdx - startIdx + 1;
     
-    % Get prediction confidence
-    pred_class = char(YPred(i));
-    true_class = char(YTrue(i));
-    confidence = max(scores(i,:)) * 100;
+    % Calculate subplot dimensions
+    subplot_cols = min(10, ceil(sqrt(currentSamples * 1.5))); % Wider layout
+    subplot_rows = ceil(currentSamples / subplot_cols);
     
-    % Color code: green for correct, red for incorrect
-    if YPred(i) == YTrue(i)
-        title_color = [0, 0.7, 0]; % Green
-        status = '✓';
-    else
-        title_color = [0.8, 0, 0]; % Red
-        status = '✗';
+    figure('Position', [50, 50, 200*subplot_cols, 150*subplot_rows]);
+    
+    for i = startIdx:endIdx
+        subplotIdx = i - startIdx + 1;
+        subplot(subplot_rows, subplot_cols, subplotIdx);
+        
+        % Read and display image
+        img = readimage(imdsTest, i);
+        imshow(img);
+        
+        % Get prediction details
+        pred_class = char(YPred(i));
+        true_class = char(YTrue(i));
+        confidence = max(scores(i,:)) * 100;
+        
+        % Color code and status
+        if YPred(i) == YTrue(i)
+            title_color = [0, 0.6, 0]; % Green for correct
+            status = '✓';
+        else
+            title_color = [0.8, 0, 0]; % Red for incorrect
+            status = '✗';
+        end
+        
+        % Enhanced title with sample number
+        title(sprintf('%s #%d\n%s (%.1f%%)\nTrue: %s', ...
+            status, i, pred_class, confidence, true_class), ...
+            'Color', title_color, 'FontSize', 7, 'FontWeight', 'bold');
+        axis off;
     end
     
-    title(sprintf('%s %s\nPred: %s (%.1f%%)\nTrue: %s', ...
-        status, pred_class, pred_class, confidence, true_class), ...
-        'Color', title_color, 'FontSize', 8);
-    axis off;
+    % Overall title for each figure
+    if numFigures > 1
+        sgtitle(sprintf('Test Predictions - Part %d/%d (Samples %d-%d)', ...
+            figNum, numFigures, startIdx, endIdx), ...
+            'FontSize', 12, 'FontWeight', 'bold');
+        saveas(gcf, sprintf('test_predictions_part%d.png', figNum));
+    else
+        sgtitle(sprintf('All Test Predictions (Total: %d samples)', numTestSamples), ...
+            'FontSize', 12, 'FontWeight', 'bold');
+        saveas(gcf, 'all_test_predictions.png');
+    end
 end
-sgtitle('Sample Predictions', 'FontSize', 14, 'FontWeight', 'bold');
-saveas(gcf, 'sample_predictions.png');
+
+% Create detailed accuracy summary by class
+figure('Position', [100, 100, 800, 500]);
+
+% Plot 1: Accuracy by Class
+subplot(2, 2, 1);
+classNames = fieldnames(classStats);
+accuracies = zeros(length(classNames), 1);
+for i = 1:length(classNames)
+    accuracies(i) = classStats.(classNames{i}).accuracy;
+end
+bar(accuracies, 'FaceColor', [0.2, 0.6, 0.8]);
+set(gca, 'XTickLabel', classNames);
+ylabel('Accuracy (%)');
+title('Per-Class Accuracy');
+ylim([0, 100]);
+grid on;
+
+% Add accuracy values on bars
+for i = 1:length(accuracies)
+    text(i, accuracies(i) + 2, sprintf('%.1f%%', accuracies(i)), ...
+        'HorizontalAlignment', 'center', 'FontWeight', 'bold');
+end
+
+% Plot 2: Correct vs Incorrect Count
+subplot(2, 2, 2);
+correctCounts = zeros(length(classNames), 1);
+incorrectCounts = zeros(length(classNames), 1);
+for i = 1:length(classNames)
+    correctCounts(i) = classStats.(classNames{i}).correct;
+    incorrectCounts(i) = classStats.(classNames{i}).incorrect;
+end
+
+bar_data = [correctCounts, incorrectCounts];
+bar(bar_data, 'stacked');
+set(gca, 'XTickLabel', classNames);
+ylabel('Number of Samples');
+title('Correct vs Incorrect Predictions');
+legend({'Correct', 'Incorrect'}, 'Location', 'best');
+grid on;
+
+% Plot 3: Sample Distribution
+subplot(2, 2, 3);
+totalCounts = correctCounts + incorrectCounts;
+pie(totalCounts, classNames);
+title('Test Dataset Distribution');
+
+% Plot 4: Overall Performance Summary
+subplot(2, 2, 4);
+axis off;
+text(0.1, 0.9, 'PERFORMANCE SUMMARY', 'FontSize', 14, 'FontWeight', 'bold');
+text(0.1, 0.8, sprintf('Overall Accuracy: %.2f%%', accuracy*100), 'FontSize', 12);
+text(0.1, 0.7, sprintf('Total Test Samples: %d', numTestSamples), 'FontSize', 11);
+text(0.1, 0.6, sprintf('Correct Predictions: %d', sum(YPred == YTrue)), 'FontSize', 11);
+text(0.1, 0.5, sprintf('Incorrect Predictions: %d', sum(YPred ~= YTrue)), 'FontSize', 11);
+
+% Per-class breakdown
+yPos = 0.35;
+for i = 1:length(classNames)
+    className = classNames{i};
+    stats = classStats.(className);
+    text(0.1, yPos, sprintf('%s: %d/%d (%.1f%%)', className, ...
+        stats.correct, stats.total, stats.accuracy), 'FontSize', 10);
+    yPos = yPos - 0.08;
+end
+
+sgtitle('Complete Test Dataset Analysis', 'FontSize', 16, 'FontWeight', 'bold');
+saveas(gcf, 'test_analysis_summary.png');
 
 %% === 10. SAVE RESULTS ===
 fprintf('💾 Saving results...\n');
@@ -284,13 +391,20 @@ fclose(fid);
 
 fprintf('✅ All results saved successfully!\n');
 fprintf('📁 Files created:\n');
-fprintf('   - cnn_model_complete.mat (model and results)\n');
+fprintf('   - cnn_model.mat (model and results)\n');
 fprintf('   - cnn_training_report.txt (detailed report)\n');
 fprintf('   - confusion_matrix.png (confusion matrix chart)\n');
 if length(classes) == 2
     fprintf('   - roc_curve.png (ROC curve)\n');
 end
-fprintf('   - sample_predictions.png (prediction samples)\n');
+if numFigures > 1
+    for figNum = 1:numFigures
+        fprintf('   - test_predictions_part%d.png (predictions part %d)\n', figNum, figNum);
+    end
+else
+    fprintf('   - all_test_predictions.png (all test predictions)\n');
+end
+fprintf('   - test_analysis_summary.png (detailed analysis summary)\n');
 
 %% === HELPER FUNCTIONS ===
 function img = preprocessImage(filename, targetSize)

@@ -1,0 +1,8 @@
+04-Aug-2025 12:24:50 | PMK 3 - Copy - Copy (2).jpeg | sakit | 95.43% | D:\pyapp\CNN\dataset\test\sakit\PMK 3 - Copy - Copy (2).jpeg
+04-Aug-2025 12:25:03 | IMG_20250716_152800.jpg | sakit | 95.73% | D:\pyapp\CNN\dataset\test\sehat\IMG_20250716_152800.jpg
+04-Aug-2025 12:25:30 | PMK 40 edit - Copy.jpg | sakit | 95.50% | D:\pyapp\CNN\dataset\test\sakit\PMK 40 edit - Copy.jpg
+04-Aug-2025 12:25:41 | IMG_20250716_161143.jpg | sakit | 95.60% | D:\pyapp\CNN\dataset\test\sehat\IMG_20250716_161143.jpg
+04-Aug-2025 12:25:52 | IMG_20250716_152800.jpg | sakit | 95.73% | D:\pyapp\CNN\dataset\test\sehat\IMG_20250716_152800.jpg
+04-Aug-2025 12:26:02 | IMG_20250716_155501.jpg | sakit | 95.47% | D:\pyapp\CNN\dataset\test\sehat\IMG_20250716_155501.jpg
+04-Aug-2025 12:26:41 | IMG_20250716_152857.jpg | sakit | 95.69% | D:\pyapp\CNN\dataset\test\sehat\IMG_20250716_152857.jpg
+04-Aug-2025 12:26:52 | IMG_20250716_154044.jpg | sakit | 95.70% | D:\pyapp\CNN\dataset\test\sehat\IMG_20250716_154044.jpg

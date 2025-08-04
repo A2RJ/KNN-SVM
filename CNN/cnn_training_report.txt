@@ -1,6 +1,6 @@
 === CNN TRAINING REPORT ===
-Date: 04-Aug-2025 11:48:43
-Training Time: 4.39 minutes
+Date: 04-Aug-2025 12:19:58
+Training Time: 4.00 minutes
 Overall Accuracy: 100.00%
 Number of Classes: 2
 Training Samples: 136
