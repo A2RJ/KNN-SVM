@@ -1,0 +1,11 @@
+=== CNN TRAINING REPORT ===
+Date: 04-Aug-2025 11:48:43
+Training Time: 4.39 minutes
+Overall Accuracy: 100.00%
+Number of Classes: 2
+Training Samples: 136
+Testing Samples: 34
+
+Confusion Matrix:
+sakit: 17 0 
+sehat: 0 17 
